@@ -1,0 +1,116 @@
+# ==========================================
+# LOGISTIC REGRESSION - Social_Network_Ads
+# ==========================================
+
+import pandas as pd  # Pandas: Used for loading and handling dataset
+
+from sklearn.model_selection import train_test_split  
+# Used to split dataset into training and testing sets
+
+from sklearn.preprocessing import StandardScaler  
+# Used for feature scaling (normalizing values)
+
+from sklearn.linear_model import LogisticRegression  
+# Logistic Regression model (used for classification problems)
+
+from sklearn.metrics import confusion_matrix  
+# Used to evaluate classification performance
+
+# -----------------------------------------
+# Load dataset
+# -----------------------------------------
+# Dataset contains user data (Age, Salary) and whether they purchased or not
+df = pd.read_csv("Social_Network_Ads.csv")
+
+# -----------------------------------------
+# Select Features and Target
+# -----------------------------------------
+# X → Input features (Age, Estimated Salary)
+# y → Target variable (Purchased: 0 or 1)
+
+X = df[['Age', 'EstimatedSalary']]
+y = df['Purchased']
+
+# -----------------------------------------
+# Train-Test Split
+# -----------------------------------------
+# Split data into:
+# 80% training data (to train model)
+# 20% testing data (to test model)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# -----------------------------------------
+# Feature Scaling
+# -----------------------------------------
+# Logistic Regression works better when features are on same scale
+# StandardScaler transforms data to mean = 0 and standard deviation = 1
+
+scaler = StandardScaler()
+
+# Fit scaler on training data and transform it
+X_train = scaler.fit_transform(X_train)
+
+# Apply same transformation to test data
+X_test = scaler.transform(X_test)
+
+# -----------------------------------------
+# Train Model
+# -----------------------------------------
+# Create Logistic Regression model and train it
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# -----------------------------------------
+# Make Predictions
+# -----------------------------------------
+# Predict whether user will purchase (0 or 1)
+
+y_pred = model.predict(X_test)
+
+# -----------------------------------------
+# CONFUSION MATRIX
+# -----------------------------------------
+# Compare actual vs predicted values
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:\n", cm)
+
+# Extract values from confusion matrix
+# TN → True Negative (correctly predicted 0)
+# FP → False Positive (incorrectly predicted 1)
+# FN → False Negative (missed prediction)
+# TP → True Positive (correctly predicted 1)
+
+TN, FP, FN, TP = cm.ravel()
+
+print("\nTP:", TP)
+print("FP:", FP)
+print("TN:", TN)
+print("FN:", FN)
+
+# -----------------------------------------
+# PERFORMANCE METRICS
+# -----------------------------------------
+
+# Accuracy → Overall correct predictions
+accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+# Error Rate → Overall incorrect predictions
+error_rate = (FP + FN) / (TP + TN + FP + FN)
+
+# Precision → Out of predicted positives, how many are correct
+precision = TP / (TP + FP)
+
+# Recall → Out of actual positives, how many are correctly predicted
+recall = TP / (TP + FN)
+
+# Print metrics
+print("\nAccuracy:", accuracy)
+print("Error Rate:", error_rate)
+print("Precision:", precision)
+print("Recall:", recall)

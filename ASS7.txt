@@ -1,0 +1,84 @@
+# ==========================================
+# TEXT ANALYTICS
+# ==========================================
+
+import nltk  # Natural Language Toolkit (NLTK): Used for NLP tasks like tokenization, POS tagging, stopwords, stemming, etc.
+
+from nltk.tokenize import word_tokenize  # Tokenization: Splits text into individual words
+
+from nltk.corpus import stopwords  # Stopwords: Common words like "is", "the", "of" that add little meaning
+
+from nltk import pos_tag  # POS Tagging: Assigns grammatical tags (noun, verb, etc.) to each word
+
+from nltk.stem import PorterStemmer, WordNetLemmatizer  
+# PorterStemmer → Stemming (cuts words to root form, may not be meaningful)
+# WordNetLemmatizer → Lemmatization (converts words to meaningful base form)
+
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer  
+# CountVectorizer → Converts text into word frequency (counts)
+# TfidfVectorizer → Converts text into importance scores (TF-IDF)
+
+# -----------------------------------------
+# Sample text
+# -----------------------------------------
+text = "Data analytics is the science of analyzing raw data to make conclusions about information."
+
+# -----------------------------------------
+# Tokenization
+# -----------------------------------------
+# Split the sentence into individual words (tokens)
+tokens = word_tokenize(text)
+print("Tokens:", tokens)
+
+# -----------------------------------------
+# POS Tagging
+# -----------------------------------------
+# Assign part-of-speech tags to each word (e.g., noun, verb)
+print("POS Tags:", pos_tag(tokens))
+
+# -----------------------------------------
+# Stopword Removal
+# -----------------------------------------
+# Get a list of common English stopwords (like is, the, of, etc.)
+# Convert to set for faster lookup
+stop_words = set(stopwords.words('english'))
+
+# Remove stopwords:
+# Loop through each word in tokens
+# Keep only words that are NOT in stop_words
+filtered = [w for w in tokens if w.lower() not in stop_words]
+
+# Print cleaned words
+print("Filtered:", filtered)
+
+# -----------------------------------------
+# Stemming & Lemmatization
+# -----------------------------------------
+
+# Create stemmer object
+# Stemming cuts words to root form (e.g., "analyzing" → "analyz")
+ps = PorterStemmer()
+
+# Create lemmatizer object
+# Lemmatization converts to meaningful base word (e.g., "analyzing" → "analyze")
+lm = WordNetLemmatizer()
+
+# Apply stemming to filtered words
+print("Stemmed:", [ps.stem(w) for w in filtered])
+
+# Apply lemmatization to filtered words
+print("Lemmatized:", [lm.lemmatize(w) for w in filtered])
+
+# -----------------------------------------
+# Term Frequency (TF)
+# -----------------------------------------
+# Convert text into word count (how many times each word appears)
+cv = CountVectorizer()
+print("TF:", cv.fit_transform([text]).toarray())
+
+# -----------------------------------------
+# TF-IDF (Term Frequency - Inverse Document Frequency)
+# -----------------------------------------
+# Convert text into importance scores (important words get higher values)
+tfidf = TfidfVectorizer()
+print("TF-IDF:", tfidf.fit_transform([text]).toarray())

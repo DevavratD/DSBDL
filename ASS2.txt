@@ -1,0 +1,102 @@
+# ==========================================
+# DATA WRANGLING II - Academic Dataset
+# ==========================================
+
+import pandas as pd  # Pandas: For data manipulation and analysis
+import numpy as np   # NumPy: For numerical operations and handling NaN
+
+# -----------------------------------------
+# Create Dataset
+# -----------------------------------------
+# Creating a sample academic dataset with some missing values and inconsistencies
+
+data = {
+    'Student_ID': [101,102,103,104,105,106,107,108,109,110],
+    'Name': ['Amit','Neha','Raj','Priya','Karan','Simran','Rohit','Pooja','Vikas','Anjali'],
+    'Gender': ['M','F','M','F','M','F','M','F',np.nan,'F'],  # Contains missing value
+    'Attendance': [85, 90, np.nan, 76, 88, 95, 102, 79, 84, -5],  # Invalid values (>100, <0)
+    'Study_Hours': [2, 5, 3, 15, 4, 6, 5, 4, 100, 3],  # Contains outlier (100)
+    'Internal_Marks': [18, 25, 20, 22, np.nan, 24, 23, 21, 19, 20],  # Missing value
+    'External_Marks': [55, 60, 58, 200, 62, 59, 61, np.nan, 57, 56]  # Invalid value (200) + missing
+}
+
+# Convert dictionary to DataFrame
+df = pd.DataFrame(data)
+
+# Save dataset to CSV file
+df.to_csv("output.csv")
+
+# Display original dataset
+print("Original Data:")
+print(df)
+
+# -------------------------------
+# 1. Missing Values & Inconsistencies
+# -------------------------------
+
+# Check number of missing values in each column
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# -----------------------------------------
+# Handle Missing Values
+# -----------------------------------------
+
+# Fill missing Gender using mode (most frequent value)
+df['Gender'] = df['Gender'].fillna(df['Gender'].mode()[0])
+
+# Fill missing numeric values using mean
+df['Attendance'] = df['Attendance'].fillna(df['Attendance'].mean())
+df['Internal_Marks'] = df['Internal_Marks'].fillna(df['Internal_Marks'].mean())
+df['External_Marks'] = df['External_Marks'].fillna(df['External_Marks'].mean())
+
+# -----------------------------------------
+# Fix Data Inconsistencies
+# -----------------------------------------
+
+# Attendance should be between 0 and 100 → clip values
+df['Attendance'] = df['Attendance'].clip(0, 100)
+
+# External marks should be between 0 and 70 → clip values
+df['External_Marks'] = df['External_Marks'].clip(0, 70)
+
+# -------------------------------
+# 2. Outlier Detection (Study_Hours)
+# -------------------------------
+
+# Calculate Quartiles
+Q1 = df['Study_Hours'].quantile(0.25)
+Q3 = df['Study_Hours'].quantile(0.75)
+
+# Interquartile Range (IQR)
+IQR = Q3 - Q1
+
+# Define lower and upper limits for outliers
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+# Ensure column is float type
+df['Study_Hours'] = df['Study_Hours'].astype(float)
+
+# Replace outliers with median value
+df.loc[
+    (df['Study_Hours'] < lower) | (df['Study_Hours'] > upper),
+    'Study_Hours'
+] = df['Study_Hours'].median()
+
+print("\nAfter Outlier Handling:")
+print(df)
+
+# -------------------------------
+# 3. Data Transformation
+# -------------------------------
+
+# Calculate final percentage from internal + external marks
+df['Final_Percentage'] = ((df['Internal_Marks'] + df['External_Marks']) / 125) * 100
+
+# Apply log transformation to normalize data
+df['Log_Final_Percentage'] = np.log1p(df['Final_Percentage'])
+
+# Display final cleaned dataset
+print("\nFinal Data:")
+print(df)

@@ -1,0 +1,78 @@
+# ==========================================
+# LINEAR REGRESSION - BOSTON HOUSING DATASET
+# ==========================================
+
+import pandas as pd  # Pandas: Used for data loading and manipulation
+
+from sklearn.model_selection import train_test_split  
+# Used to split dataset into training and testing sets
+
+from sklearn.linear_model import LinearRegression  
+# Linear Regression model for predicting continuous values
+
+from sklearn.metrics import mean_squared_error, r2_score  
+# Evaluation metrics:
+# Mean Squared Error (MSE) → Measures average prediction error
+# R2 Score → Measures how well the model fits the data
+
+# -----------------------------------------
+# Load dataset
+# -----------------------------------------
+# Dataset contains housing data (features + house price)
+url = "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df = pd.read_csv(url)
+
+# Display first 5 rows of dataset
+print(df.head())
+
+# -----------------------------------------
+# Features and Target
+# -----------------------------------------
+# X → Independent variables (input features)
+# y → Dependent variable (target/output)
+
+X = df.drop('medv', axis=1)   # Drop 'medv' column → remaining columns are features , axis = 1 -> column , 0 -> rows 
+y = df['medv']                # 'medv' = Median house price (target variable)
+
+# -----------------------------------------
+# Train-Test Split
+# -----------------------------------------
+# Split data into:
+# 80% training data → used to train the model
+# 20% testing data → used to evaluate the model
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42 # random_state = 42 makes sure you get the same output every time you run the code
+)
+
+# -----------------------------------------
+# Create Model
+# -----------------------------------------
+# Initialize Linear Regression model
+model = LinearRegression()
+
+# -----------------------------------------
+# Train Model
+# -----------------------------------------
+# Fit the model using training data
+# Model learns relationship between X (features) and y (target)
+model.fit(X_train, y_train)
+
+# -----------------------------------------
+# Make Predictions
+# -----------------------------------------
+# Predict house prices using test data
+y_pred = model.predict(X_test)
+
+# -----------------------------------------
+# Model Evaluation
+# -----------------------------------------
+# Mean Squared Error → Lower value = better model
+print("\nMean Squared Error:", mean_squared_error(y_test, y_pred))
+
+# R2 Score → Value between 0 and 1 (closer to 1 = better fit)
+print("R2 Score:", r2_score(y_test, y_pred))
+
+
+# - New Cell 
+# df 

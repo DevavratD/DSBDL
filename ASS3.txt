@@ -1,0 +1,70 @@
+# CELL 1 
+# ==========================================
+# DESCRIPTIVE STATISTICS - TITANIC DATASET
+# ==========================================
+
+import pandas as pd  # Pandas: Used for data loading and manipulation
+
+# -----------------------------------------
+# Load Dataset
+# -----------------------------------------
+# Titanic dataset contains passenger details like Age, Sex, Survival, etc.
+
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+df = pd.read_csv(url)
+
+# -----------------------------------------
+# Data Cleaning
+# -----------------------------------------
+# Remove rows where Age is missing (NaN)
+# This is important because statistical calculations cannot be done on missing values
+
+df = df.dropna(subset=['Age'])
+
+# -----------------------------------------
+# Grouping Data
+# -----------------------------------------
+# Group data based on categorical variable 'Sex'
+# Then select 'Age' column for analysis
+
+group = df.groupby('Sex')['Age']
+
+# -----------------------------------------
+# Summary Statistics
+# -----------------------------------------
+# Calculate statistical measures for each group (male & female)
+
+print("Mean:\n", group.mean())        # Average age
+print("\nMedian:\n", group.median())  # Middle value
+print("\nMinimum:\n", group.min())    # Smallest age
+print("\nMaximum:\n", group.max())    # Largest age
+print("\nStandard Deviation:\n", group.std())  # Spread of data
+
+# -----------------------------------------
+# Extract Age Lists
+# -----------------------------------------
+# Create separate lists of ages for males and females
+
+male_ages = df[df['Sex'] == 'male']['Age'].tolist()
+female_ages = df[df['Sex'] == 'female']['Age'].tolist()
+
+# Print first 10 values from each list (to avoid large output)
+
+print("\nList of Male Ages:", male_ages[:10])
+print("\nList of Female Ages:", female_ages[:10])
+
+# Cell 2 
+
+df.species.unique()
+df.groupby('species').describe()
+import pandas as pd
+
+# Load dataset
+url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+df = pd.read_csv(url)
+
+# Loop through species
+for species in df['species'].unique():
+    print("\n===== Species:", species, "=====")
+    subset = df[df['species'] == species]
+    print(subset.describe())

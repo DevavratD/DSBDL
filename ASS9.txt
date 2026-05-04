@@ -1,0 +1,68 @@
+# ==========================================
+# DATA VISUALIZATION II - TITANIC
+# ==========================================
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = sns.load_dataset('titanic')
+
+# Box plot: Age distribution by Gender and Survival
+sns.boxplot(x='sex', y='age', hue='survived', data=df)
+
+plt.title("Age Distribution by Gender and Survival")
+plt.xlabel("Gender")
+plt.ylabel("Age")
+
+plt.show()
+
+# Observations :
+
+# 1. Females have higher survival in younger–middle ages
+# Look at female, survived = 1 (orange)
+# Median is around ~28–30
+# Spread is decent
+
+# 👉 Meaning:
+
+# Many females in this age range survived
+
+# 2. Male survival is lower compared to females
+# For males:
+# survived (orange) and not survived (blue) are closer
+# No strong dominance of survival
+
+# 👉 Meaning:
+
+# Male survival is weaker compared to females
+
+# 3. Age distribution of survivors is similar across genders
+# Median for both:
+# male survived ≈ 28
+# female survived ≈ 28–30
+
+# 👉 Meaning:
+
+# Survival is not strongly dependent on age alone
+
+# 4. Males show more outliers (older ages)
+# Look at male side:
+# dots around 70–80
+
+# 👉 Meaning:
+
+# Some older males exist as outliers
+
+# 5. Spread (variation) is larger in males
+# Male boxes + whiskers are slightly wider
+
+# 👉 Meaning:
+
+# Age variability is higher in 
+
+
+
+
+# From the boxplot, it is observed that the median age of survivors is similar for both genders. Female passengers show slightly better survival in the middle age group. Male passengers have a wider age distribution with some higher-age outliers. Overall, age does not show a strong influence on survival based on this plot alone.
+

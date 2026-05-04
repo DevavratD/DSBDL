@@ -1,0 +1,157 @@
+///Step-1
+
+# Install Java
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+
+# Download Hadoop
+!wget -q https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+
+# Extract
+!tar -xzf hadoop-3.3.6.tar.gz
+
+/////Step-2
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+os.environ["HADOOP_HOME"] = "/content/hadoop-3.3.6"
+os.environ["PATH"] += ":/content/hadoop-3.3.6/bin"
+
+
+////step-3
+%%writefile WeatherAverage.java
+package com.mapreduce.weather;
+
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WeatherAverage {
+
+    // ======================
+    // Mapper
+    // ======================
+    public static class WeatherMapper extends Mapper<Object, Text, Text, Text> {
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String line = value.toString().trim();
+
+            // Skip header
+            if (line.startsWith("Date") || line.isEmpty()) return;
+
+            String[] fields = line.split(",");
+
+            if (fields.length == 4) {
+                String date = fields[0].trim();
+                String temp = fields[1].trim();
+                String dew = fields[2].trim();
+                String wind = fields[3].trim();
+
+                context.write(new Text(date), new Text(temp + "," + dew + "," + wind));
+            }
+        }
+    }
+
+    // ======================
+    // Reducer
+    // ======================
+    public static class WeatherReducer extends Reducer<Text, Text, Text, Text> {
+
+        public void reduce(Text key, Iterable<Text> values, Context context)
+                throws IOException, InterruptedException {
+
+            double tempSum = 0, dewSum = 0, windSum = 0;
+            int count = 0;
+
+            for (Text val : values) {
+                String[] parts = val.toString().split(",");
+
+                if (parts.length == 3) {
+                    try {
+                        tempSum += Double.parseDouble(parts[0]);
+                        dewSum += Double.parseDouble(parts[1]);
+                        windSum += Double.parseDouble(parts[2]);
+                        count++;
+                    } catch (NumberFormatException e) {
+                        // Skip bad records
+                    }
+                }
+            }
+
+            if (count > 0) {
+                double avgTemp = tempSum / count;
+                double avgDew = dewSum / count;
+                double avgWind = windSum / count;
+
+                context.write(key, new Text(
+                        "AvgTemp=" + String.format("%.2f", avgTemp) +
+                        ", AvgDew=" + String.format("%.2f", avgDew) +
+                        ", AvgWind=" + String.format("%.2f", avgWind)
+                ));
+            }
+        }
+    }
+
+    // ======================
+    // Main
+    // ======================
+    public static void main(String[] args) throws Exception {
+
+        if (args.length < 2) {
+            System.err.println("Usage: WeatherAverage <input> <output>");
+            System.exit(-1);
+        }
+
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "Weather Average");
+
+        job.setJarByClass(WeatherAverage.class);
+        job.setMapperClass(WeatherMapper.class);
+        job.setReducerClass(WeatherReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+
+
+////step-4
+!javac -source 1.8 -target 1.8 -classpath $(/content/hadoop-3.3.6/bin/hadoop classpath) -d . WeatherAverage.java
+
+///step-5
+!jar -cvf weather.jar com/mapreduce/weather/*.class
+
+////step-6
+!jar -cvf weather.jar com/mapreduce/weather/*.class
+
+
+////step-7
+!mkdir -p input
+
+!echo "Date,Temp,Dew,Wind" > input/data.txt
+!echo "2024-05-01,30.5,22.1,12.3" >> input/data.txt
+!echo "2024-05-01,32.0,23.0,10.5" >> input/data.txt
+!echo "2024-05-02,28.0,21.5,8.0" >> input/data.txt
+!echo "2024-05-02,29.5,22.0,9.2" >> input/data.txt
+
+
+///step-8
+!rm -rf output
+!/content/hadoop-3.3.6/bin/hadoop jar weather.jar com.mapreduce.weather.WeatherAverage input output
+
+
+///step-9
+!cat output/part-r-00000

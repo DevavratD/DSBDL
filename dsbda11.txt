@@ -1,0 +1,121 @@
+# =========================
+# 1. Install Java & Hadoop
+# =========================
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+!wget -q https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+!tar -xzf hadoop-3.3.6.tar.gz
+
+# Set environment
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+os.environ["HADOOP_HOME"] = "/content/hadoop-3.3.6"
+os.environ["PATH"] += ":/content/hadoop-3.3.6/bin"
+
+# Force Java 8
+!update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+!update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+
+# =========================
+# 2. Write Java Code
+# =========================
+%%writefile WordCount.java
+package com.mapreduce.wc;
+
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
+
+public class WordCount {
+
+    public static void main(String[] args) throws Exception {
+        Configuration c = new Configuration();
+        String[] files = new GenericOptionsParser(c, args).getRemainingArgs();
+
+        if (files.length < 2) {
+            System.err.println("Usage: WordCount <input> <output>");
+            System.exit(-1);
+        }
+
+        Job j = Job.getInstance(c, "wordcount");
+        j.setJarByClass(WordCount.class);
+        j.setMapperClass(MapForWordCount.class);
+        j.setReducerClass(ReduceForWordCount.class);
+        j.setOutputKeyClass(Text.class);
+        j.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(j, new Path(files[0]));
+        FileOutputFormat.setOutputPath(j, new Path(files[1]));
+
+        System.exit(j.waitForCompletion(true) ? 0 : 1);
+    }
+
+    public static class MapForWordCount extends Mapper<LongWritable, Text, Text, IntWritable> {
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+
+        public void map(LongWritable key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String[] words = value.toString().split("\\s+");
+
+            for (String w : words) {
+                if (!w.isEmpty()) {
+                    word.set(w.trim().toUpperCase());
+                    context.write(word, one);
+                }
+            }
+        }
+    }
+
+    public static class ReduceForWordCount extends Reducer<Text, IntWritable, Text, IntWritable> {
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            context.write(key, new IntWritable(sum));
+        }
+    }
+}
+
+# =========================
+# 3. Clean old files
+# =========================
+!rm -rf input output com wc.jar
+
+# =========================
+# 4. Create input
+# =========================
+!mkdir input
+!echo "hello world hello hadoop" > input/sample.txt
+
+# =========================
+# 5. Compile (Java 8 compatible)
+# =========================
+!javac -source 1.8 -target 1.8 -classpath $(/content/hadoop-3.3.6/bin/hadoop classpath) -d . WordCount.java
+
+# =========================
+# 6. Create JAR
+# =========================
+!jar -cvf wc.jar com/mapreduce/wc/*.class
+
+# =========================
+# 7. Run Hadoop Job
+# =========================
+!/content/hadoop-3.3.6/bin/hadoop jar wc.jar com.mapreduce.wc.WordCount input output
+
+# =========================
+# 8. Show Output
+# =========================
+!cat output/part-r-00000

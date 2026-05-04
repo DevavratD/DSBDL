@@ -1,0 +1,107 @@
+
+# import seaborn as sns
+
+# df = sns.load_dataset('titanic')
+
+
+# 2. Load dataset from web
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+df = pd.read_csv(url)
+
+
+df.sample(5)
+
+
+# Display first 5 rows
+df.head(10)
+
+
+# 3. Check dataset structure
+print("\nShape of dataset:")
+print(df.shape)
+
+print("\nColumn names:")
+print(df.columns)
+
+
+
+for col in df.columns:
+    print(col)
+
+
+# 4. Data Preprocessing
+# Check missing values
+
+print("\nMissing values:")
+print(df.isnull().sum())
+
+
+# Summary statistics
+print("\nStatistical Summary:")
+print(df.describe())
+
+
+# Info (data types + non-null counts)
+print("\nDataset Info:")
+print(df.info())
+
+
+df.Embarked.value_counts()
+
+
+# 5. Data Formatting and Type Conversion
+
+# Convert categorical columns to 'category' type
+df['Sex'] = df['Sex'].astype('category')
+df['Embarked'] = df['Embarked'].astype('category')
+df['Survived'] = df['Survived'].astype('category')
+
+print("\nUpdated Data Types:")
+print(df.dtypes)
+
+
+# 6. Handle missing values
+
+# Drop Cabin (too many missing values)
+df.drop('Cabin', axis=1, inplace=True)
+
+
+# Fill Age with mean
+df['Age'] = df['Age'].fillna(df['Age'].mean())
+
+
+# Fill Embarked with mode
+df['Embarked'] = df['Embarked'].fillna(df['Embarked'].mode()[0])
+
+print("\nMissing values after handling:")
+print(df.isnull().sum())
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler() 
+df['Age'] = scaler.fit_transform(df[['Age']])
+
+
+# 6.5 Normalize numerical columns (Min-Max Scaling)
+
+df['Age'] = (df['Age'] - df['Age'].min()) / (df['Age'].max() - df['Age'].min())
+df['Fare'] = (df['Fare'] - df['Fare'].min()) / (df['Fare'].max() - df['Fare'].min())
+
+print("\nData after normalization:")
+print(df[['Age', 'Fare']].head())
+
+
+# 7. Convert categorical to numerical
+# Using one-hot encoding
+df_encoded = pd.get_dummies(df, columns=['Sex', 'Embarked'])
+
+print("\nEncoded Data:")
+print(df_encoded.head())
+
+
+# Final dataset shape
+print("\nFinal Shape:")
+print(df_encoded.shape)
+
+

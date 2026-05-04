@@ -1,0 +1,30 @@
+# ==========================================
+# DATA VISUALIZATION III - IRIS DATASET
+# ==========================================
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = sns.load_dataset('iris')
+
+# -----------------------------------------
+# 1. Features and their types
+# -----------------------------------------
+print("Features and Data Types:\n")
+print(df.dtypes)
+
+# -----------------------------------------
+# 2. Histogram for each feature
+# -----------------------------------------
+df.hist(figsize=(8,6))
+plt.suptitle("Histogram of Iris Features")
+plt.show()
+
+# -----------------------------------------
+# 3. Box Plot
+# -----------------------------------------
+sns.boxplot(data=df)
+plt.title("Boxplot of Iris Features")
+plt.show()

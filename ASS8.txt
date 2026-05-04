@@ -1,0 +1,32 @@
+# ==========================================
+# DATA VISUALIZATION I - TITANIC
+# ==========================================
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = sns.load_dataset('titanic')
+
+# -----------------------------------------
+# Pattern 1: Survival based on Gender
+# -----------------------------------------
+sns.countplot(x='sex', hue='survived', data=df)
+plt.title("Survival based on Gender")
+plt.show()
+
+# -----------------------------------------
+# Pattern 2: Survival based on Class
+# -----------------------------------------
+sns.countplot(x='class', hue='survived', data=df)
+plt.title("Survival based on Class")
+plt.show()
+
+# -----------------------------------------
+# Histogram of Fare
+# -----------------------------------------
+plt.hist(df['fare'], bins=20, edgecolor='black') # bins = 20 means the data is divided into 20 groups to show the frequency distribution.
+plt.title("Fare Distribution")
+plt.xlabel("Fare")
+plt.ylabel("Frequency")
+plt.show()

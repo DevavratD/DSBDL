@@ -1,0 +1,111 @@
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+!wget -q https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+!tar -xzf hadoop-3.3.6.tar.gz
+
+# Set environment
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+os.environ["HADOOP_HOME"] = "/content/hadoop-3.3.6"
+os.environ["PATH"] += ":/content/hadoop-3.3.6/bin"
+
+# Force Java 8
+!update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+!update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+
+
+
+%%writefile LogProcessor.java
+package com.mapreduce.lf;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class LogProcessor {
+
+    public static class IPMapper extends Mapper<Object, Text, Text, IntWritable> {
+        private final static IntWritable one = new IntWritable(1);
+        private Text ip = new Text();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            StringTokenizer itr = new StringTokenizer(value.toString());
+
+            if (itr.hasMoreTokens()) {
+                String ipAddr = itr.nextToken();
+
+                if (ipAddr.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
+                    ip.set(ipAddr);
+                    context.write(ip, one);
+                }
+            }
+        }
+    }
+
+    public static class SumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            context.write(key, new IntWritable(sum));
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "Log IP Count");
+
+        job.setJarByClass(LogProcessor.class);
+        job.setMapperClass(IPMapper.class);
+        job.setCombinerClass(SumReducer.class);
+        job.setReducerClass(SumReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+
+import os
+
+# create input folder FIRST
+!mkdir -p input
+
+if os.path.exists("InputLog.txt"):
+    !cp InputLog.txt input/log.txt
+else:
+    !echo "10.1.1.1 - - test" > input/log.txt
+    !echo "10.1.1.1 - - test" >> input/log.txt
+    !echo "10.2.2.2 - - test" >> input/log.txt
+
+
+!javac -source 1.8 -target 1.8 -classpath $(/content/hadoop-3.3.6/bin/hadoop classpath) -d . LogProcessor.java
+
+
+!jar -cvf log.jar com/mapreduce/lf/*.class
+
+
+!rm -rf output /////do if file already exists
+
+
+!/content/hadoop-3.3.6/bin/hadoop jar log.jar com.mapreduce.lf.LogProcessor input output
+!cat output/part-r-00000
