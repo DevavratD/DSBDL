@@ -1,0 +1,31 @@
+# ==========================================
+# COVID VACCINE ANALYSIS (FINAL)
+# ==========================================
+
+import pandas as pd
+
+# Load dataset
+df = pd.read_csv("covid_vaccine_statewise.csv")
+
+# Fill missing values
+df.fillna(0, inplace=True)
+
+# a. Describe dataset
+print("===== DESCRIPTION =====")
+print(df.describe())
+
+# b. First dose (state-wise)
+print("\n===== FIRST DOSE (STATE-WISE) =====")
+print(df.groupby("State")["First Dose Administered"].sum())
+
+# c. Second dose (state-wise)
+print("\n===== SECOND DOSE (STATE-WISE) =====")
+print(df.groupby("State")["Second Dose Administered"].sum())
+
+# d. Total males vaccinated
+print("\n===== MALES VACCINATED =====")
+print(df["Male(Individuals Vaccinated)"].sum())
+
+# e. Total females vaccinated
+print("\n===== FEMALES VACCINATED =====")
+print(df["Female(Individuals Vaccinated)"].sum())
