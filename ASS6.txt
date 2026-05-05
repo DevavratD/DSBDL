@@ -1,113 +1,47 @@
-# ==========================================
-# NAIVE BAYES - IRIS DATASET
-# ==========================================
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix
 
-import pandas as pd  # Pandas: For data handling
-
-from sklearn.model_selection import train_test_split  
-# Used to split dataset into training and testing sets
-
-from sklearn.naive_bayes import GaussianNB  
-# Gaussian Naive Bayes model (used for classification)
-
-from sklearn.metrics import confusion_matrix  
-# Used to evaluate classification performance
-
-# -----------------------------------------
-# Load Dataset
-# -----------------------------------------
-# Option 1 (commented): Load from sklearn
+# # Load datase
 # from sklearn.datasets import load_iris
 # iris = load_iris()
 
-# Option 2: Load using seaborn (used here)
-import seaborn as sns  
+import seaborn as sns 
 df = sns.load_dataset('iris')
-
-# Option 3 (commented): Load from CSV
 # df = pd.read_csv("iris.csv")
 
-# -----------------------------------------
-# Features and Target
-# -----------------------------------------
-# X → Input features (sepal & petal measurements)
-# y → Target variable (species: setosa, versicolor, virginica)
+# Features and target
+X = df.drop('species', axis=1)
+y = (df['species'] == 'setosa').astype(int)
 
-X = df.drop('species', axis=1)  # Remove target column → remaining are features
-y = df['species']               # Target column
+# Convert to binary (setosa vs others)
 
-# -----------------------------------------
-# NOTE:
-# Confusion matrix with TN, FP, FN, TP works best for binary classification.
-# Iris dataset has 3 classes → so cm will be 3x3 matrix.
-# The below ravel() works only if classification is binary.
-# -----------------------------------------
 
-# -----------------------------------------
-# Train-Test Split
-# -----------------------------------------
-# 70% training data, 30% testing data
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42
-)
-
-# -----------------------------------------
-# Train Model
-# -----------------------------------------
-# Create and train Gaussian Naive Bayes model
-
+# Train model
 model = GaussianNB()
 model.fit(X_train, y_train)
 
-# -----------------------------------------
-# Make Predictions
-# -----------------------------------------
-# Predict species for test data
-
+# Predict
 y_pred = model.predict(X_test)
 
-# -----------------------------------------
 # Confusion Matrix
-# -----------------------------------------
-# Compare actual vs predicted values
-
 cm = confusion_matrix(y_test, y_pred)
+TN, FP, FN, TP = cm.ravel()
 
 print("Confusion Matrix:\n", cm)
-
-# -----------------------------------------
-# IMPORTANT:
-# For multiclass (3 classes), cm is 3x3 → cannot directly use TN, FP, FN, TP
-# The below line may give error unless converted to binary classification
-# -----------------------------------------
-
-TN, FP, FN, TP = cm.ravel()  # Works ONLY for binary classification
-
 print("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN)
 
-# -----------------------------------------
-# Performance Metrics
-# -----------------------------------------
-
-# Accuracy → Overall correct predictions
+# Metrics
 accuracy = (TP + TN) / (TP + TN + FP + FN)
-
-# Error Rate → Incorrect predictions
 error_rate = (FP + FN) / (TP + TN + FP + FN)
-
-# Precision → Correct positive predictions
 precision = TP / (TP + FP)
-
-# Recall → Correctly identified actual positives
 recall = TP / (TP + FN)
 
-# Print metrics
 print("Accuracy:", accuracy)
 print("Error Rate:", error_rate)
 print("Precision:", precision)
 print("Recall:", recall)
-
-# --- New CEll
-# from sklearn.metrics import classification_report
-#print("\nClassification Report:\n", classification_report(y_test, y_pred))
